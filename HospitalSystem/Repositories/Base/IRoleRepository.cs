@@ -1,7 +1,6 @@
 using HospitalSystem.Models;
-using HospitalSystem.Repositories.Base;
 
-namespace HospitalSystem.Repositories
+namespace HospitalSystem.Repositories.Base
 {
     public interface IRoleRepository : IRepository<Role>
     {
