@@ -1,0 +1,12 @@
+@model string
+@{
+    // لون الحالة: مؤكد (أزرق) - مكتمل (أخضر) - ملغي (أحمر) - قيد الانتظار (أصفر)
+    var css = Model switch
+    {
+        "مؤكد" => "badge-soft-primary",
+        "مكتمل" => "badge-soft-success",
+        "ملغي" => "badge-soft-danger",
+        _ => "badge-soft-warning"
+    };
+}
+<span class="badge @css">@Model</span>

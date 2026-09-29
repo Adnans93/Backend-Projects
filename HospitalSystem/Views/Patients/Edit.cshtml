@@ -1,0 +1,38 @@
+@model Patient
+@{
+    ViewData["Title"] = "تعديل بيانات مريض";
+    ViewData["Subtitle"] = "تحديث بيانات المريض";
+}
+
+<div class="card form-card">
+    <form asp-action="Edit" method="post">
+        <input type="hidden" asp-for="Id" />
+        <div class="card-body">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Name" class="form-label"></label>
+                    <input asp-for="Name" class="form-control" placeholder="الاسم الكامل" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Phone" class="form-label"></label>
+                    <input asp-for="Phone" class="form-control" dir="ltr" placeholder="05xxxxxxxx" />
+                    <span asp-validation-for="Phone" class="text-danger"></span>
+                </div>
+                <div class="col-12 mb-1">
+                    <label asp-for="Address" class="form-label"></label>
+                    <input asp-for="Address" class="form-control" placeholder="المدينة، الحي" />
+                </div>
+            </div>
+        </div>
+        <div class="card-footer d-flex gap-2">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1"></i> حفظ التعديلات</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">إلغاء</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

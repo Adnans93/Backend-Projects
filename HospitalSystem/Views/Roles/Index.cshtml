@@ -1,0 +1,65 @@
+@model IEnumerable<Role>
+@{
+    ViewData["Title"] = "الأدوار";
+    ViewData["Subtitle"] = "كل دور يحمل مجموعة من الصلاحيات";
+    var colors = new Dictionary<string, string> { ["Admin"] = "g-pink", ["Doctor"] = "g-cyan", ["Reception"] = "g-blue" };
+}
+
+@section PageActions {
+    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> إضافة دور</a>
+}
+
+<div class="row g-3">
+    @foreach (var item in Model)
+    {
+        var isAdmin = item.Name == AppPermissions.AdminRole;
+        <div class="col-md-6 col-xl-4">
+            <div class="card dept-card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="avatar @(colors.GetValueOrDefault(item.Name ?? "", "g-purple"))"><i class="bi bi-shield-lock"></i></span>
+                        <div>
+                            <h5 class="fw-bold mb-0">@item.Name</h5>
+                            <small class="text-muted-2">@item.Permissions.Count صلاحية</small>
+                        </div>
+                    </div>
+                    <div class="d-flex flex-wrap gap-1">
+                        @if (isAdmin)
+                        {
+                            <span class="badge badge-soft-danger">كل الصلاحيات</span>
+                        }
+                        else
+                        {
+                            @foreach (var p in item.Permissions.Take(6))
+                            {
+                                <span class="badge badge-soft-secondary">@AppPermissions.DisplayName(p.Name)</span>
+                            }
+                            @if (item.Permissions.Count > 6)
+                            {
+                                <span class="badge badge-soft-primary">+@(item.Permissions.Count - 6)</span>
+                            }
+                            @if (!item.Permissions.Any())
+                            {
+                                <span class="text-muted-2 small">لا توجد صلاحيات بعد</span>
+                            }
+                        }
+                    </div>
+                </div>
+                <div class="card-footer d-flex gap-2">
+                    @if (!isAdmin)
+                    {
+                        <a asp-action="AssignPermissions" asp-route-roleId="@item.Id" class="btn btn-sm btn-outline-secondary flex-grow-1"><i class="bi bi-key me-1"></i> الصلاحيات</a>
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-icon edit" title="تعديل"><i class="bi bi-pencil"></i></a>
+                        <form asp-action="DeleteConfirmed" asp-route-id="@item.Id" method="post" onsubmit="return confirm('هل تريد حذف هذا الدور؟');">
+                            <button type="submit" class="btn btn-icon danger" title="حذف"><i class="bi bi-trash3"></i></button>
+                        </form>
+                    }
+                    else
+                    {
+                        <span class="text-muted-2 small"><i class="bi bi-lock me-1"></i> دور النظام الأساسي، يملك كل الصلاحيات تلقائياً</span>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>

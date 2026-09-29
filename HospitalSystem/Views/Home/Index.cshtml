@@ -1,0 +1,246 @@
+@model DashboardVM
+@{
+    ViewData["Title"] = "لوحة التحكم";
+    var fullName = User.FindFirst(UserService.ClaimFullName)?.Value ?? User.Identity?.Name;
+    var hour = DateTime.Now.Hour;
+    var greeting = hour < 12 ? "صباح الخير" : "مساء الخير";
+    var statuses = new[] { "مؤكد", "قيد الانتظار", "مكتمل", "ملغي" };
+    var statusValues = statuses.Select(s => Model.StatusCounts.GetValueOrDefault(s)).ToArray();
+    var totalAppointments = statusValues.Sum();
+    var maxDoctors = Math.Max(1, Model.DoctorsPerClinic.Select(d => d.DoctorsCount).DefaultIfEmpty(0).Max());
+    var canCreateAppointment = Perms.Has(AppPermissions.AppointmentsCreate);
+    var canCreatePatient = Perms.Has(AppPermissions.PatientsCreate);
+    var canViewPatients = Perms.Has(AppPermissions.PatientsView);
+    var canViewAppointments = Perms.Has(AppPermissions.AppointmentsView) || Perms.Has(AppPermissions.AppointmentsViewOwn);
+    var arCulture = new System.Globalization.CultureInfo("ar-SA") { DateTimeFormat = { Calendar = new System.Globalization.GregorianCalendar() } };
+    var bars = new[] { "g-blue", "g-purple", "g-green", "g-orange", "g-pink", "g-cyan" };
+}
+
+<!-- الترحيب -->
+<div class="hero mb-4">
+    <div class="d-flex flex-wrap align-items-center gap-3">
+        <div>
+            <h2>@greeting، @fullName 👋</h2>
+            <p>
+                @if (Model.AppointmentsTodayCount > 0)
+                {
+                    <span>لديك <b class="text-white">@Model.AppointmentsTodayCount</b> @(Model.OwnAppointmentsOnly ? "مواعيد" : "موعداً") اليوم، و <b class="text-white">@Model.UpcomingCount</b> موعداً قادماً إجمالاً.</span>
+                }
+                else
+                {
+                    <span>لا توجد مواعيد اليوم، يوم هادئ ✨</span>
+                }
+            </p>
+        </div>
+        <div class="ms-auto d-flex gap-2 flex-wrap">
+            @if (canCreateAppointment)
+            {
+                <a asp-controller="Appointments" asp-action="Create" class="btn btn-primary"><i class="bi bi-calendar-plus me-1"></i> حجز موعد</a>
+            }
+            @if (canCreatePatient)
+            {
+                <a asp-controller="Patients" asp-action="Create" class="btn btn-outline-light"><i class="bi bi-person-plus me-1"></i> مريض جديد</a>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- الإحصائيات -->
+<div class="row g-3 mb-4">
+    @{
+        var stats = new[]
+        {
+            (Label: "مواعيد اليوم", Value: Model.AppointmentsTodayCount, Icon: "bi-calendar2-check", Color: "g-blue", Controller: "Appointments"),
+            (Label: "المرضى", Value: Model.PatientsCount, Icon: "bi-people", Color: "g-green", Controller: "Patients"),
+            (Label: "الأطباء", Value: Model.DoctorsCount, Icon: "bi-person-badge", Color: "g-purple", Controller: "Doctors"),
+            (Label: "العيادات", Value: Model.ClinicsCount, Icon: "bi-hospital", Color: "g-orange", Controller: "Clinics"),
+            (Label: "المواعيد القادمة", Value: Model.UpcomingCount, Icon: "bi-clock-history", Color: "g-cyan", Controller: "Appointments"),
+            (Label: "السجلات الطبية", Value: Model.MedicalRecordsCount, Icon: "bi-file-earmark-medical", Color: "g-pink", Controller: "MedicalRecords"),
+        };
+    }
+    @foreach (var s in stats)
+    {
+        <div class="col-6 col-md-4 col-xl-2">
+            <a asp-controller="@s.Controller" asp-action="Index" class="stat-card">
+                <span class="stat-glow @s.Color"></span>
+                <span class="stat-icon @s.Color"><i class="bi @s.Icon"></i></span>
+                <div class="stat-value">@s.Value</div>
+                <div class="stat-label">@s.Label</div>
+            </a>
+        </div>
+    }
+</div>
+
+<!-- الرسوم البيانية -->
+<div class="row g-3 mb-4">
+    <div class="col-xl-8">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center">
+                <div>
+                    <h3 class="card-title mb-0">المواعيد خلال آخر 7 أيام</h3>
+                    <small class="text-muted-2">عدد المواعيد لكل يوم</small>
+                </div>
+                <span class="badge badge-soft-primary ms-auto">@Model.WeekCounts.Sum() موعد</span>
+            </div>
+            <div class="card-body">
+                <div id="weekChart" style="min-height:280px"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h3 class="card-title mb-0">حالات المواعيد</h3>
+                <small class="text-muted-2">توزيع كل المواعيد حسب الحالة</small>
+            </div>
+            <div class="card-body d-flex flex-column justify-content-center">
+                @if (totalAppointments == 0)
+                {
+                    <div class="empty-state"><i class="bi bi-pie-chart"></i>لا توجد مواعيد بعد</div>
+                }
+                else
+                {
+                    <div id="statusChart"></div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- المواعيد القادمة -->
+    <div class="col-xl-6">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center">
+                <h3 class="card-title mb-0"><i class="bi bi-clock me-1 text-primary"></i> المواعيد القادمة</h3>
+                @if (canViewAppointments)
+                {
+                    <a asp-controller="Appointments" asp-action="Index" class="btn btn-sm btn-outline-secondary ms-auto">عرض الكل</a>
+                }
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.TodayAppointments.Any())
+                {
+                    <div class="empty-state"><i class="bi bi-calendar-x"></i>لا توجد مواعيد قادمة</div>
+                }
+                @foreach (var a in Model.TodayAppointments)
+                {
+                    <div class="timeline-item">
+                        <div class="time-chip">
+                            <div class="t">@a.AppointmentDate.ToString("h:mm tt", arCulture)</div>
+                            <div class="d">@(a.AppointmentDate.Date == DateTime.Today ? "اليوم" : a.AppointmentDate.ToString("d MMM", arCulture))</div>
+                        </div>
+                        <div class="person flex-grow-1 overflow-hidden">
+                            <span class="avatar bg-primary"><i class="bi bi-person"></i></span>
+                            <div class="overflow-hidden">
+                                <div class="name text-truncate">@a.Patient?.Name</div>
+                                <div class="sub text-truncate"><i class="bi bi-person-badge me-1"></i>@a.Doctor?.Name</div>
+                            </div>
+                        </div>
+                        <partial name="_StatusBadge" model="a.Status" />
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- الأطباء حسب العيادة -->
+    <div class="col-md-6 col-xl-3">
+        <div class="card h-100">
+            <div class="card-header">
+                <h3 class="card-title mb-0"><i class="bi bi-hospital me-1 text-warning"></i> الأطباء حسب العيادة</h3>
+            </div>
+            <div class="card-body">
+                @if (!Model.DoctorsPerClinic.Any())
+                {
+                    <div class="empty-state"><i class="bi bi-hospital"></i>لا توجد عيادات</div>
+                }
+                @for (int i = 0; i < Model.DoctorsPerClinic.Count; i++)
+                {
+                    var d = Model.DoctorsPerClinic[i];
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="fw-bold">@d.Name</span>
+                            <span class="text-muted-2">@d.DoctorsCount طبيب</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar @bars[i % bars.Length]" style="width:@(d.DoctorsCount * 100 / maxDoctors)%"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- أحدث المرضى -->
+    <div class="col-md-6 col-xl-3">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center">
+                <h3 class="card-title mb-0"><i class="bi bi-person-plus me-1 text-success"></i> أحدث المرضى</h3>
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.RecentPatients.Any())
+                {
+                    <div class="empty-state"><i class="bi bi-people"></i>لا يوجد مرضى</div>
+                }
+                @foreach (var p in Model.RecentPatients)
+                {
+                    <div class="timeline-item">
+                        <div class="person overflow-hidden">
+                            <span class="avatar bg-primary"><i class="bi bi-person"></i></span>
+                            <div class="overflow-hidden">
+                                <div class="name text-truncate">@p.Name</div>
+                                <div class="sub" dir="ltr" style="text-align:right">@p.Phone</div>
+                            </div>
+                        </div>
+                        @if (canViewPatients)
+                        {
+                            <a asp-controller="Patients" asp-action="Details" asp-route-id="@p.Id" class="btn btn-icon info ms-auto" title="ملف المريض"><i class="bi bi-chevron-left"></i></a>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/apexcharts/apexcharts.min.js"></script>
+    <script>
+        const font = 'Tajawal, Cairo, sans-serif';
+        const common = {
+            chart: { fontFamily: font, foreColor: '#8b93a7', toolbar: { show: false }, background: 'transparent' },
+            theme: { mode: 'dark' },
+            grid: { borderColor: '#262b38', strokeDashArray: 4 },
+            tooltip: { theme: 'dark' }
+        };
+
+        new ApexCharts(document.querySelector('#weekChart'), {
+            ...common,
+            chart: { ...common.chart, type: 'area', height: 280 },
+            series: [{ name: 'المواعيد', data: @Json.Serialize(Model.WeekCounts) }],
+            xaxis: { categories: @Json.Serialize(Model.WeekLabels), axisBorder: { show: false }, axisTicks: { show: false } },
+            yaxis: { min: 0, forceNiceScale: true, labels: { formatter: v => Math.round(v) } },
+            colors: ['#4f8cff'],
+            stroke: { curve: 'smooth', width: 3 },
+            fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: .45, opacityTo: .02, stops: [0, 95] } },
+            dataLabels: { enabled: false },
+            markers: { size: 4, strokeWidth: 0, hover: { size: 6 } }
+        }).render();
+
+        const statusEl = document.querySelector('#statusChart');
+        if (statusEl) {
+            new ApexCharts(statusEl, {
+                ...common,
+                chart: { ...common.chart, type: 'donut', height: 290 },
+                series: @Json.Serialize(statusValues),
+                labels: @Json.Serialize(statuses),
+                colors: ['#4f8cff', '#f5b544', '#22c39a', '#f25f6b'],
+                stroke: { width: 0 },
+                legend: { position: 'bottom', fontFamily: font, markers: { offsetX: 4 } },
+                dataLabels: { enabled: false },
+                plotOptions: { pie: { donut: { size: '72%', labels: { show: true, total: { show: true, label: 'الإجمالي', color: '#8b93a7', fontFamily: font } , value: { color: '#fff', fontSize: '26px', fontWeight: 800 } } } } }
+            }).render();
+        }
+    </script>
+}

@@ -1,0 +1,104 @@
+@model IEnumerable<AppointmentDto>
+@{
+    ViewData["Title"] = "المواعيد";
+    var ownOnly = ViewBag.OwnOnly == true;
+    ViewData["Subtitle"] = ownOnly ? "مواعيدك مع المرضى" : "جدول مواعيد المستشفى";
+    var current = ViewBag.Status as string;
+    var canCreate = Perms.Has(AppPermissions.AppointmentsCreate);
+    var canEdit = Perms.Has(AppPermissions.AppointmentsEdit);
+    var canStatus = Perms.Has(AppPermissions.AppointmentsChangeStatus);
+    var canDelete = Perms.Has(AppPermissions.AppointmentsDelete);
+    var arCulture = new System.Globalization.CultureInfo("ar-SA") { DateTimeFormat = { Calendar = new System.Globalization.GregorianCalendar() } };
+}
+
+@section PageActions {
+    @if (canCreate)
+    {
+        <a asp-action="Create" class="btn btn-primary"><i class="bi bi-calendar-plus me-1"></i> حجز موعد</a>
+    }
+}
+
+<div class="card">
+    <div class="card-header d-flex flex-wrap align-items-center gap-2 filter-pills">
+        <a asp-action="Index" class="btn btn-sm @(current == null ? "btn-primary" : "btn-outline-secondary")">الكل</a>
+        @foreach (var s in HospitalSystem.Controllers.AppointmentsController.Statuses)
+        {
+            <a asp-action="Index" asp-route-status="@s" class="btn btn-sm @(current == s ? "btn-primary" : "btn-outline-secondary")">@s</a>
+        }
+        <span class="text-muted-2 ms-auto small">@Model.Count() موعد</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>المريض</th>
+                    <th>الطبيب</th>
+                    <th>الموعد</th>
+                    <th>الحالة</th>
+                    <th style="width:150px">إجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="5"><div class="empty-state"><i class="bi bi-calendar-x"></i>لا توجد مواعيد</div></td></tr>
+                }
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            <a asp-controller="Patients" asp-action="Details" asp-route-id="@item.PatientId" class="person text-reset">
+                                <span class="avatar bg-primary"><i class="bi bi-person"></i></span>
+                                <span class="name">@item.PatientName</span>
+                            </a>
+                        </td>
+                        <td><i class="bi bi-person-badge me-1 text-muted-2"></i>@item.DoctorName</td>
+                        <td>
+                            <div class="fw-bold">@item.AppointmentDate.ToString("dddd d MMMM", arCulture)</div>
+                            <div class="small text-muted-2"><i class="bi bi-clock me-1"></i>@item.AppointmentDate.ToString("hh:mm tt", arCulture)</div>
+                        </td>
+                        <td>
+                            @if (canStatus)
+                            {
+                                <div class="dropdown">
+                                    <button class="btn p-0 border-0" data-bs-toggle="dropdown" title="تغيير الحالة">
+                                        <partial name="_StatusBadge" model="item.Status" /> <i class="bi bi-chevron-down small text-muted-2"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        @foreach (var s in HospitalSystem.Controllers.AppointmentsController.Statuses.Where(s => s != item.Status))
+                                        {
+                                            <li>
+                                                <form asp-action="ChangeStatus" asp-route-id="@item.Id" method="post">
+                                                    <input type="hidden" name="status" value="@s" />
+                                                    <button type="submit" class="dropdown-item">@s</button>
+                                                </form>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+                            else
+                            {
+                                <partial name="_StatusBadge" model="item.Status" />
+                            }
+                        </td>
+                        <td>
+                            <div class="actions">
+                                @if (canEdit)
+                                {
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-icon edit" title="تعديل"><i class="bi bi-pencil"></i></a>
+                                }
+                                @if (canDelete)
+                                {
+                                    <form asp-action="Delete" asp-route-id="@item.Id" method="post" onsubmit="return confirm('هل تريد حذف هذا الموعد؟');">
+                                        <button type="submit" class="btn btn-icon danger" title="حذف"><i class="bi bi-trash3"></i></button>
+                                    </form>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

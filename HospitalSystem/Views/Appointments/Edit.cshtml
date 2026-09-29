@@ -1,0 +1,47 @@
+@model AppointmentDto
+@{
+    ViewData["Title"] = "تعديل موعد";
+    ViewData["Subtitle"] = "تعديل بيانات الموعد";
+}
+
+<div class="card form-card">
+    <form asp-action="Edit" method="post">
+        <input type="hidden" asp-for="Id" />
+        <div class="card-body">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="PatientId" class="form-label"><i class="bi bi-person me-1"></i> المريض</label>
+                    <select asp-for="PatientId" asp-items="ViewBag.Patients" class="form-select">
+                        <option value="">-- اختر المريض --</option>
+                    </select>
+                    <span asp-validation-for="PatientId" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="DoctorId" class="form-label"><i class="bi bi-person-badge me-1"></i> الطبيب</label>
+                    <select asp-for="DoctorId" asp-items="ViewBag.Doctors" class="form-select">
+                        <option value="">-- اختر الطبيب --</option>
+                    </select>
+                    <span asp-validation-for="DoctorId" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="AppointmentDate" class="form-label"><i class="bi bi-calendar3 me-1"></i> التاريخ والوقت</label>
+                    <input asp-for="AppointmentDate" class="form-control" />
+                    <span asp-validation-for="AppointmentDate" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Status" class="form-label"><i class="bi bi-flag me-1"></i> الحالة</label>
+                    <select asp-for="Status" asp-items="ViewBag.Statuses" class="form-select"></select>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer d-flex gap-2">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1"></i> حفظ التعديلات</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">إلغاء</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,49 @@
+@model IEnumerable<Clinic>
+@{
+    ViewData["Title"] = "العيادات";
+    ViewData["Subtitle"] = "عيادات المستشفى وتخصصاتها";
+    var canManage = Perms.Has(AppPermissions.ClinicsManage);
+    var icons = new[] { "bi-heart-pulse", "bi-lungs", "bi-capsule", "bi-bandaid", "bi-eye", "bi-activity" };
+    var colors = new[] { "g-blue", "g-purple", "g-green", "g-orange", "g-pink", "g-cyan" };
+    var i = 0;
+}
+
+@section PageActions {
+    @if (canManage)
+    {
+        <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> إضافة عيادة</a>
+    }
+}
+
+@if (!Model.Any())
+{
+    <div class="card"><div class="empty-state"><i class="bi bi-hospital"></i>لا توجد عيادات بعد</div></div>
+}
+
+<div class="row g-3">
+    @foreach (var item in Model)
+    {
+        var color = colors[i % colors.Length];
+        var icon = icons[i++ % icons.Length];
+        <div class="col-md-6 col-xl-4">
+            <div class="card dept-card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-start gap-3">
+                        <span class="avatar @color"><i class="bi @icon"></i></span>
+                        <div class="flex-grow-1 overflow-hidden">
+                            <h5 class="fw-bold mb-1">@item.Name</h5>
+                            <p class="text-muted-2 mb-0 small">@(string.IsNullOrWhiteSpace(item.Description) ? "بدون وصف" : item.Description)</p>
+                        </div>
+                        @if (canManage)
+                        {
+                            <div class="actions">
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-icon edit" title="تعديل"><i class="bi bi-pencil"></i></a>
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-icon danger" title="حذف"><i class="bi bi-trash3"></i></a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

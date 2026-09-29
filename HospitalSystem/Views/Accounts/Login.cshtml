@@ -1,0 +1,61 @@
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-bs-theme="dark">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>تسجيل الدخول - نظام إدارة المستشفيات</title>
+
+    <link rel="stylesheet" href="~/lib/tajawal/tajawal.css">
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="~/template/css/adminlte.rtl.min.css">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true">
+</head>
+<body>
+    <main class="login-wrap">
+        <div class="login-card">
+            <div class="text-center mb-4">
+                <span class="brand-logo mb-3"><i class="bi bi-heart-pulse-fill"></i></span>
+                <h1 class="h3 fw-bold mb-1">نظام المستشفيات</h1>
+                <p class="text-muted-2 mb-0">مرحباً بعودتك، سجّل دخولك للمتابعة</p>
+            </div>
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger py-2 d-flex align-items-center gap-2" role="alert">
+                    <i class="bi bi-exclamation-circle-fill"></i>
+                    <div asp-validation-summary="ModelOnly" class="m-0 p-0 list-unstyled"></div>
+                </div>
+            }
+
+            <form asp-controller="Accounts" asp-action="Login" asp-route-returnUrl="@ViewBag.ReturnUrl" method="post">
+                <div class="mb-3">
+                    <label class="form-label" for="username">اسم المستخدم</label>
+                    <div class="input-icon">
+                        <i class="bi bi-person"></i>
+                        <input id="username" name="username" type="text" class="form-control form-control-lg"
+                               placeholder="أدخل اسم المستخدم" value="@ViewBag.Username" required autofocus />
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label" for="password">كلمة المرور</label>
+                    <div class="input-icon">
+                        <i class="bi bi-lock"></i>
+                        <input id="password" name="password" type="password" class="form-control form-control-lg"
+                               placeholder="••••••••" required />
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg w-100">
+                    تسجيل الدخول <i class="bi bi-arrow-left ms-1"></i>
+                </button>
+            </form>
+
+            <p class="text-center text-muted-2 small mt-4 mb-0">&copy; @DateTime.Now.Year نظام إدارة المستشفيات</p>
+        </div>
+    </main>
+</body>
+</html>

@@ -1,0 +1,37 @@
+@model UserRolesVM
+@{
+    ViewData["Title"] = "أدوار المستخدم";
+    ViewData["Subtitle"] = "حدد الأدوار التي يملكها المستخدم";
+}
+
+<div class="card form-card-sm">
+    <form asp-action="ManageRoles" method="post">
+        <input type="hidden" asp-for="UserId" />
+        <input type="hidden" asp-for="UserName" />
+        <div class="card-header">
+            <div class="person">
+                <span class="avatar bg-primary"><i class="bi bi-person"></i></span>
+                <span class="name">@Model.UserName</span>
+            </div>
+        </div>
+        <div class="card-body">
+            @if (!Model.Roles.Any())
+            {
+                <div class="empty-state"><i class="bi bi-shield"></i>لا توجد أدوار</div>
+            }
+            @for (int i = 0; i < Model.Roles.Count; i++)
+            {
+                <div class="form-check form-switch mb-3">
+                    <input type="hidden" asp-for="Roles[i].RoleId" />
+                    <input type="hidden" asp-for="Roles[i].RoleName" />
+                    <input asp-for="Roles[i].IsSelected" class="form-check-input" role="switch" />
+                    <label asp-for="Roles[i].IsSelected" class="form-check-label fw-bold">@Model.Roles[i].RoleName</label>
+                </div>
+            }
+        </div>
+        <div class="card-footer d-flex gap-2">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1"></i> حفظ</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">إلغاء</a>
+        </div>
+    </form>
+</div>

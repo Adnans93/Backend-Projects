@@ -1,0 +1,44 @@
+@model MedicalRecord
+@{
+    ViewData["Title"] = "تعديل سجل طبي";
+    ViewData["Subtitle"] = "تعديل بيانات الزيارة";
+}
+
+<div class="card form-card">
+    <form asp-action="Edit" method="post">
+        <input type="hidden" asp-for="Id" />
+        <div class="card-body">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="PatientId" class="form-label"></label>
+                    <select asp-for="PatientId" asp-items="ViewBag.Patients" class="form-select">
+                        <option value="">-- اختر المريض --</option>
+                    </select>
+                    <span asp-validation-for="PatientId" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="VisitDate" class="form-label"></label>
+                    <input asp-for="VisitDate" class="form-control" />
+                </div>
+                <div class="col-12 mb-3">
+                    <label asp-for="Diagnosis" class="form-label"></label>
+                    <textarea asp-for="Diagnosis" class="form-control" rows="3" placeholder="التشخيص الطبي للحالة"></textarea>
+                    <span asp-validation-for="Diagnosis" class="text-danger"></span>
+                </div>
+                <div class="col-12 mb-1">
+                    <label asp-for="Prescriptions" class="form-label"></label>
+                    <textarea asp-for="Prescriptions" class="form-control" rows="3" placeholder="الأدوية والجرعات"></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer d-flex gap-2">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1"></i> حفظ التعديلات</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">إلغاء</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

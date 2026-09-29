@@ -1,0 +1,70 @@
+@model IEnumerable<UsersDto>
+@{
+    ViewData["Title"] = "المستخدمين";
+    ViewData["Subtitle"] = "حسابات الدخول للنظام وأدوارها";
+}
+
+@section PageActions {
+    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-person-plus me-1"></i> إضافة مستخدم</a>
+}
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>المستخدم</th>
+                    <th>البريد الإلكتروني</th>
+                    <th>الأدوار</th>
+                    <th>مرتبط بطبيب</th>
+                    <th style="width:190px">إجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            <div class="person">
+                                @if (!string.IsNullOrEmpty(item.ImageURL))
+                                {
+                                    <img src="@(item.ImageURL)" class="avatar" alt="" />
+                                }
+                                else
+                                {
+                                    <span class="avatar bg-primary"><i class="bi bi-person"></i></span>
+                                }
+                                <div>
+                                    <div class="name">@item.Name</div>
+                                    <div class="sub" dir="ltr" style="text-align:right">@@@item.Username</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-muted-2">@(string.IsNullOrEmpty(item.Email) ? "—" : item.Email)</td>
+                        <td>
+                            @if (!item.Roles.Any())
+                            {
+                                <span class="text-muted-2 small">بدون دور</span>
+                            }
+                            @foreach (var r in item.Roles)
+                            {
+                                <span class="badge @(r == AppPermissions.AdminRole ? "badge-soft-danger" : r == AppPermissions.DoctorRole ? "badge-soft-info" : "badge-soft-primary")">@r</span>
+                            }
+                        </td>
+                        <td>@(item.DoctorName ?? "—")</td>
+                        <td>
+                            <div class="actions">
+                                <a asp-action="ManageRoles" asp-route-id="@item.Id" class="btn btn-icon success" title="الأدوار"><i class="bi bi-shield-lock"></i></a>
+                                <a asp-action="ManageFiles" asp-route-UserId="@item.Id" class="btn btn-icon info" title="الملفات"><i class="bi bi-folder2"></i></a>
+                                <a asp-action="Edit" asp-route-uid="@item.UID" class="btn btn-icon edit" title="تعديل"><i class="bi bi-pencil"></i></a>
+                                <form asp-action="DeleteConfirmed" asp-route-id="@item.Id" method="post" onsubmit="return confirm('هل تريد حذف هذا المستخدم؟');">
+                                    <button type="submit" class="btn btn-icon danger" title="حذف"><i class="bi bi-trash3"></i></button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

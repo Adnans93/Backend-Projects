@@ -1,0 +1,19 @@
+@model Clinic
+@{
+    ViewData["Title"] = "حذف عيادة";
+}
+
+<div class="card form-card-sm">
+    <div class="card-body text-center py-5">
+        <span class="avatar avatar-lg g-pink mb-3"><i class="bi bi-trash3"></i></span>
+        <h4 class="fw-bold">حذف عيادة "@Model.Name"؟</h4>
+        <p class="text-muted-2 mb-0">سيتم حذف جميع الأطباء التابعين لهذه العيادة ومواعيدهم. لا يمكن التراجع عن هذا الإجراء.</p>
+    </div>
+    <div class="card-footer d-flex gap-2 justify-content-center">
+        <form asp-action="Delete" method="post">
+            <input type="hidden" asp-for="Id" />
+            <button type="submit" class="btn btn-danger"><i class="bi bi-trash3 me-1"></i> نعم، احذف</button>
+        </form>
+        <a asp-action="Index" class="btn btn-outline-secondary">إلغاء</a>
+    </div>
+</div>

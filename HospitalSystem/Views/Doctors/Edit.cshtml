@@ -1,0 +1,76 @@
+@model Doctor
+@{
+    ViewData["Title"] = "تعديل بيانات طبيب";
+    ViewData["Subtitle"] = "تحديث بيانات الطبيب";
+}
+
+<div class="card form-card">
+    <form asp-action="Edit" method="post" enctype="multipart/form-data">
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="UID" />
+        <input type="hidden" asp-for="ImageURL" />
+        <div class="card-body">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+            <div class="d-flex align-items-center gap-3 mb-4">
+                @if (!string.IsNullOrEmpty(Model?.ImageURL))
+                {
+                    <img src="@(Model?.ImageURL)" class="avatar avatar-lg" alt="" />
+                }
+                else
+                {
+                    <span class="avatar avatar-lg bg-primary"><i class="bi bi-person"></i></span>
+                }
+                <div class="flex-grow-1">
+                    <label class="form-label">الصورة الشخصية</label>
+                    <input type="file" name="imageFile" class="form-control" accept="image/*" />
+                    <small class="text-muted-2">اختياري - JPG أو PNG</small>
+                </div>
+            </div>
+
+            <div class="section-title">البيانات الأساسية</div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Name" class="form-label"></label>
+                    <input asp-for="Name" class="form-control" placeholder="د. ..." />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Phone" class="form-label"></label>
+                    <input asp-for="Phone" class="form-control" dir="ltr" placeholder="05xxxxxxxx" />
+                    <span asp-validation-for="Phone" class="text-danger"></span>
+                </div>
+                <div class="col-12 mb-3">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" dir="ltr" placeholder="doctor@hospital.com" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="section-title">العمل</div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="ClinicId" class="form-label"></label>
+                    <select asp-for="ClinicId" asp-items="ViewBag.Clinics" class="form-select">
+                        <option value="">-- اختر العيادة --</option>
+                    </select>
+                    <span asp-validation-for="ClinicId" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="JobId" class="form-label"></label>
+                    <select asp-for="JobId" asp-items="ViewBag.Jobs" class="form-select">
+                        <option value="">-- بدون --</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer d-flex gap-2">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1"></i> حفظ التعديلات</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">إلغاء</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

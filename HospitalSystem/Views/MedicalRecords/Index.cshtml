@@ -1,0 +1,74 @@
+@model IEnumerable<MedicalRecord>
+@{
+    ViewData["Title"] = "السجلات الطبية";
+    ViewData["Subtitle"] = "التشخيصات والأدوية الموصوفة للمرضى";
+    var canCreate = Perms.Has(AppPermissions.MedicalRecordsCreate);
+    var canEdit = Perms.Has(AppPermissions.MedicalRecordsEdit);
+    var canDelete = Perms.Has(AppPermissions.MedicalRecordsDelete);
+}
+
+@section PageActions {
+    @if (canCreate)
+    {
+        <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> إضافة سجل</a>
+    }
+}
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>المريض</th>
+                    <th>تاريخ الزيارة</th>
+                    <th>التشخيص الطبي</th>
+                    <th>الأدوية الموصوفة</th>
+                    <th style="width:110px">إجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="5"><div class="empty-state"><i class="bi bi-file-earmark-medical"></i>لا توجد سجلات طبية</div></td></tr>
+                }
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            <a asp-controller="Patients" asp-action="Details" asp-route-id="@item.PatientId" class="person text-reset">
+                                <span class="avatar bg-primary"><i class="bi bi-person"></i></span>
+                                <span class="name">@item.Patient?.Name</span>
+                            </a>
+                        </td>
+                        <td class="text-nowrap"><i class="bi bi-calendar3 me-1 text-muted-2"></i>@item.VisitDate.ToString("yyyy/MM/dd")</td>
+                        <td class="fw-bold">@item.Diagnosis</td>
+                        <td>
+                            @if (!string.IsNullOrWhiteSpace(item.Prescriptions))
+                            {
+                                <span class="badge badge-soft-success"><i class="bi bi-capsule me-1"></i>@item.Prescriptions</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted-2">—</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="actions">
+                                @if (canEdit)
+                                {
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-icon edit" title="تعديل"><i class="bi bi-pencil"></i></a>
+                                }
+                                @if (canDelete)
+                                {
+                                    <form asp-action="Delete" asp-route-id="@item.Id" method="post" onsubmit="return confirm('هل تريد حذف هذا السجل؟');">
+                                        <button type="submit" class="btn btn-icon danger" title="حذف"><i class="bi bi-trash3"></i></button>
+                                    </form>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

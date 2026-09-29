@@ -1,0 +1,109 @@
+@model Patient
+@{
+    ViewData["Title"] = "ملف المريض";
+    var appointments = Model.Appointments?.OrderByDescending(a => a.AppointmentDate).ToList() ?? new List<Appointment>();
+    var records = Model.MedicalRecords?.OrderByDescending(r => r.VisitDate).ToList() ?? new List<MedicalRecord>();
+    var canEdit = Perms.Has(AppPermissions.PatientsEdit);
+    var canBook = Perms.Has(AppPermissions.AppointmentsCreate);
+    var canViewRecords = Perms.Has(AppPermissions.MedicalRecordsView);
+    var canAddRecord = Perms.Has(AppPermissions.MedicalRecordsCreate);
+    var arCulture = new System.Globalization.CultureInfo("ar-SA") { DateTimeFormat = { Calendar = new System.Globalization.GregorianCalendar() } };
+}
+
+@section PageActions {
+    @if (canEdit)
+    {
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-light"><i class="bi bi-pencil me-1"></i> تعديل</a>
+    }
+    <a asp-action="Index" class="btn btn-outline-secondary">رجوع</a>
+}
+
+<div class="row g-3">
+    <div class="col-xl-4">
+        <div class="card h-100">
+            <div class="card-body text-center pt-4">
+                <span class="avatar avatar-lg bg-primary"><i class="bi bi-person"></i></span>
+                <h4 class="fw-bold mt-3 mb-1">@Model.Name</h4>
+                <div class="text-muted-2 mb-3">رقم الملف #@Model.Id</div>
+                <div class="d-flex justify-content-center gap-2 mb-3">
+                    <span class="badge badge-soft-primary">@appointments.Count موعد</span>
+                    <span class="badge badge-soft-success">@records.Count سجل طبي</span>
+                </div>
+                <div class="info-list text-start">
+                    <div class="item">
+                        <span class="icon"><i class="bi bi-telephone"></i></span>
+                        <div><div class="label">رقم الهاتف</div><div class="fw-bold" dir="ltr">@Model.Phone</div></div>
+                    </div>
+                    <div class="item">
+                        <span class="icon"><i class="bi bi-geo-alt"></i></span>
+                        <div><div class="label">العنوان</div><div class="fw-bold">@(string.IsNullOrWhiteSpace(Model.Address) ? "—" : Model.Address)</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-8">
+        <div class="card mb-3">
+            <div class="card-header d-flex align-items-center">
+                <h3 class="card-title mb-0"><i class="bi bi-calendar2-check me-1 text-primary"></i> المواعيد</h3>
+                @if (canBook)
+                {
+                    <a asp-controller="Appointments" asp-action="Create" asp-route-patientId="@Model.Id" class="btn btn-sm btn-primary ms-auto"><i class="bi bi-plus-lg me-1"></i> حجز موعد</a>
+                }
+            </div>
+            <div class="card-body p-0">
+                @if (!appointments.Any())
+                {
+                    <div class="empty-state"><i class="bi bi-calendar-x"></i>لا توجد مواعيد</div>
+                }
+                @foreach (var a in appointments)
+                {
+                    <div class="timeline-item">
+                        <div class="time-chip">
+                            <div class="t">@a.AppointmentDate.ToString("h:mm tt", arCulture)</div>
+                            <div class="d">@a.AppointmentDate.ToString("yyyy/MM/dd")</div>
+                        </div>
+                        <div class="flex-grow-1"><i class="bi bi-person-badge me-1 text-muted-2"></i>@a.Doctor?.Name</div>
+                        <partial name="_StatusBadge" model="a.Status" />
+                    </div>
+                }
+            </div>
+        </div>
+
+        @if (canViewRecords)
+        {
+            <div class="card">
+                <div class="card-header d-flex align-items-center">
+                    <h3 class="card-title mb-0"><i class="bi bi-file-earmark-medical me-1 text-success"></i> السجلات الطبية</h3>
+                    @if (canAddRecord)
+                    {
+                        <a asp-controller="MedicalRecords" asp-action="Create" asp-route-patientId="@Model.Id" class="btn btn-sm btn-primary ms-auto"><i class="bi bi-plus-lg me-1"></i> إضافة سجل</a>
+                    }
+                </div>
+                <div class="card-body p-0">
+                    @if (!records.Any())
+                    {
+                        <div class="empty-state"><i class="bi bi-file-earmark-x"></i>لا توجد سجلات طبية</div>
+                    }
+                    @foreach (var r in records)
+                    {
+                        <div class="timeline-item align-items-start">
+                            <div class="time-chip">
+                                <div class="t">@r.VisitDate.ToString("dd")</div>
+                                <div class="d">@r.VisitDate.ToString("yyyy/MM")</div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold mb-1">@r.Diagnosis</div>
+                                @if (!string.IsNullOrWhiteSpace(r.Prescriptions))
+                                {
+                                    <div class="small text-muted-2"><i class="bi bi-capsule me-1"></i>@r.Prescriptions</div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>

@@ -1,0 +1,47 @@
+@model IEnumerable<Job>
+@{
+    ViewData["Title"] = "المسميات الوظيفية";
+    ViewData["Subtitle"] = "الدرجات الوظيفية للأطباء (استشاري، أخصائي، مقيم...)";
+}
+
+@section PageActions {
+    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> إضافة مسمى</a>
+}
+
+<div class="card form-card">
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>المسمى الوظيفي</th>
+                    <th style="width:110px">إجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="2"><div class="empty-state"><i class="bi bi-briefcase"></i>لا توجد مسميات بعد</div></td></tr>
+                }
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            <div class="person">
+                                <span class="avatar avatar-sm g-purple"><i class="bi bi-briefcase"></i></span>
+                                <span class="name">@item.Name</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="actions">
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-icon edit" title="تعديل"><i class="bi bi-pencil"></i></a>
+                                <form asp-action="Delete" asp-route-id="@item.Id" method="post" onsubmit="return confirm('هل تريد حذف هذا المسمى؟');">
+                                    <button type="submit" class="btn btn-icon danger" title="حذف"><i class="bi bi-trash3"></i></button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

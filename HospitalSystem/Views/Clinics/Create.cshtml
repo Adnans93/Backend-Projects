@@ -1,0 +1,30 @@
+@model ClinicDto
+@{
+    ViewData["Title"] = "إضافة عيادة";
+    ViewData["Subtitle"] = "أضف عيادة جديدة";
+}
+
+<div class="card form-card">
+    <form asp-action="Create" method="post">
+        <div class="card-body">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+            <div class="mb-3">
+                <label asp-for="Name" class="form-label"></label>
+                <input asp-for="Name" class="form-control" placeholder="مثال: عيادة الباطنية" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="mb-1">
+                <label asp-for="Description" class="form-label"></label>
+                <textarea asp-for="Description" class="form-control" rows="4" placeholder="وصف مختصر عن العيادة وخدماتها"></textarea>
+            </div>
+        </div>
+        <div class="card-footer d-flex gap-2">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1"></i> حفظ العيادة</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">إلغاء</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

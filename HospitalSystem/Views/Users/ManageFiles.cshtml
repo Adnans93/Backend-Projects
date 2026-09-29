@@ -1,0 +1,60 @@
+@model UserFile
+@{
+    ViewData["Title"] = "ملفات المستخدم";
+    ViewData["Subtitle"] = ViewBag.userName;
+    var files = ViewBag.Files as List<UserFile> ?? new List<UserFile>();
+}
+
+@section PageActions {
+    <a asp-action="Index" class="btn btn-outline-secondary">رجوع</a>
+}
+
+<div class="row g-3">
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title mb-0"><i class="bi bi-cloud-arrow-up me-1 text-primary"></i> رفع ملف</h3></div>
+            <form asp-action="ManageFiles" method="post" enctype="multipart/form-data">
+                <input type="hidden" asp-for="UserId" />
+                <div class="card-body">
+                    <div asp-validation-summary="All" class="alert alert-danger"></div>
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label"></label>
+                        <input asp-for="Name" class="form-control" placeholder="مثال: الهوية الوطنية" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+                    <div>
+                        <label class="form-label">الملف</label>
+                        <input type="file" name="file" class="form-control" />
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-upload me-1"></i> رفع</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title mb-0"><i class="bi bi-folder2-open me-1 text-warning"></i> الملفات المرفوعة</h3></div>
+            <div class="card-body p-0">
+                @if (!files.Any())
+                {
+                    <div class="empty-state"><i class="bi bi-folder-x"></i>لا توجد ملفات</div>
+                }
+                @foreach (var f in files)
+                {
+                    <div class="timeline-item">
+                        <span class="avatar avatar-sm g-orange"><i class="bi bi-file-earmark"></i></span>
+                        <div class="flex-grow-1 fw-bold">@f.Name</div>
+                        <div class="actions">
+                            <a href="@f.FileURL" target="_blank" class="btn btn-icon info" title="عرض"><i class="bi bi-box-arrow-up-left"></i></a>
+                            <form asp-action="DeleteFile" asp-route-id="@f.Id" method="post" onsubmit="return confirm('هل تريد حذف هذا الملف؟');">
+                                <button type="submit" class="btn btn-icon danger" title="حذف"><i class="bi bi-trash3"></i></button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
